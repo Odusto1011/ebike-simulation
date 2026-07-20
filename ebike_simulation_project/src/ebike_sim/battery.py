@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from exceptions import BatteryPowerError
+from .exceptions import BatteryPowerError
 
 
 @dataclass(slots=True)

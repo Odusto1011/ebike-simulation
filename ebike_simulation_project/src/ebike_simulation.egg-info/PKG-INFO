@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: ebike-simulation
+Version: 1.0.0
+Summary: GPS-basierte Auslegung und Simulation eines E-Bikes
+Requires-Python: >=3.11
+Requires-Dist: numpy>=2.0
+Requires-Dist: pandas>=2.2
+Requires-Dist: matplotlib>=3.9

@@ -6,10 +6,10 @@ import logging
 import numpy as np
 import pandas as pd
 
-from battery import Battery
-from config import SimulationConfig
-from motor import Motor
-from physics import BikePhysicsModel
+from .battery import Battery
+from .config import SimulationConfig
+from .motor import Motor
+from .physics import BikePhysicsModel
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from config import SimulationConfig
+from .config import SimulationConfig
 
 
 class BikePhysicsModel:

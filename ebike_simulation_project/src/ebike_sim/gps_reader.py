@@ -24,9 +24,9 @@ class GPSDataReader:
         "longitude": {
             "longitude", "lon", "lng", "laengengrad", "längengrad", "laenge", "länge"
         },
-        "elevation_m": {
+       "elevation_m": {
             "elevation", "elevation_m", "altitude", "alt", "height",
-            "hoehe", "höhe", "hoehe_m", "höhe_m"
+            "hoehe", "höhe", "hoehe_m", "höhe_m", "ele"
         },
     }
 

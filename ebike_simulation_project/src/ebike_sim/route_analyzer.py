@@ -5,8 +5,8 @@ import logging
 import numpy as np
 import pandas as pd
 
-from config import SimulationConfig
-from exceptions import GPSDataError
+from .config import SimulationConfig
+from .exceptions import GPSDataError
 
 logger = logging.getLogger(__name__)
 
