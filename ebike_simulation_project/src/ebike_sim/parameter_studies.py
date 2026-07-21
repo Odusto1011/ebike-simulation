@@ -26,12 +26,14 @@ def run_studies(gps_file: Path) -> None:
     test_masses = np.arange(70, 135, 5)
     energy_results_mass = []
 
-    print("\nStarte Sarameterstudie 1: Masse...")
+    print("\nStarte Sarameterstudie 1: Veränderung der Masse auf den Akkuverbauch:")
     for mass in test_masses:
-        config = SimulationConfig(smoothing_enabled=True)
-        config.total_mass_kg = float(mass)
+        config = SimulationConfig(
+            smoothing_enabled=True,
+            rider_mass_kg=float(mass) - 25.0
+        )
 
-        route = RouteAnalyzer(smoothing_enabled = True)
+        route = RouteAnalyzer(config).analyze(gps_data)
         physics = BikePhysicsModel(config)
         motor = Motor(
             torque_constant_nm_per_a=config.motor_torque_constant_nm_per_a,
@@ -39,26 +41,26 @@ def run_studies(gps_file: Path) -> None:
             max_mechanical_power_w=config.motor_max_mechanical_power_w,
         )
 
-        lipo = LiPoBattery(series_cells=10, parallel_cells=4, cell_capacity_ah=3.0, initial_soc=1.0)
+        lipo = LiPoBattery(series_cells=10, parallel_cells=20, cell_capacity_ah=3.0, initial_soc=1.0)
         nmc = NMCBattery(series_cells=10, parallel_cells=4, cell_capacity_ah=3.0, initial_soc=1.0)
 
         simulation = EBikeSimulation(config, physics, motor)
         results, summary = simulation.run(route, [lipo, nmc])
 
         lipo_end_soc = results["lipo_soc"].iloc[-1]
-        consumed_wh = 444.0 - (lipo_end_soc * 444.0)
+        consumed_wh = 2220.0 - (lipo_end_soc * 2220.0)
         energy_results_mass.append(consumed_wh)
         print(f"- Masse: {mass:3d} kg -> Verbrauch: {consumed_wh:.2f} WH")
 
-        plt.figure(figsize=(8, 5))
-        plt.plot(test_masses, energy_results_mass, marker='o', color='blue', linewidth=2)
-        plt.title("Parameterstudie: Einfluss der Masse auf den Energieverbrauch")
-        plt.xlabel("Gesamtmasse (Fahrer + Fahrrad) / kg")
-        plt.ylabel("Verbrauchte Energie (LiPo) / Wh")
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig(output_dir / "study_01_mass.png", dpi=160)
-        plt.close()
+    plt.figure(figsize=(8, 5))
+    plt.plot(test_masses, energy_results_mass, marker='o', color='blue', linewidth=2)
+    plt.title("Parameterstudie: Einfluss der Masse auf den Energieverbrauch")
+    plt.xlabel("Gesamtmasse (Fahrer + Fahrrad) / kg")
+    plt.ylabel("Verbrauchte Energie (LiPo) / Wh")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(output_dir / "study_01_mass.png", dpi=160)
+    plt.close()
 
 
 # 2.Studie Einfluss des Luftwiderstandes (cw-Wert)
