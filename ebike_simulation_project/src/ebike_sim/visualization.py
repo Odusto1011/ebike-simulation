@@ -4,6 +4,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import folium
 
 
 class ResultVisualizer:
@@ -91,6 +92,8 @@ class ResultVisualizer:
             output_dir / "08_akkuspannung.png",
         )
 
+        self._create_map(data, output_dir / "09_route_map.html")
+
     @staticmethod
     def _line_plot(
         x: pd.Series,
@@ -118,3 +121,28 @@ class ResultVisualizer:
         plt.tight_layout()
         plt.savefig(file_path, dpi=160)
         plt.close()
+    
+    @staticmethod
+    def _create_map(data: pd.DataFrame, file_path: Path) -> None:
+        if "latitude" not in data.columns or "longitude" not in data.columns:
+            return
+        
+        center_lat = data["latitude"].mean()
+        center_lon = data["longitude"].mean()
+        route_map = folium.Map(location=[center_lat, center_lon], zoom_start=12, tiles="CartoDB positron")
+
+        coordinates = list(zip(data["latitude"], data["longitude"]))
+
+        folium.PolyLine(
+            locations=coordinates,
+            weight = 5,
+            color="blue",
+            opacity = 0.8,
+            tooltip= "Fahrtroute"
+        ).add_to(route_map)
+
+
+        folium.Marker(coordinates[0], popup="Start", icon=folium.Icon(color="green")).add_to(route_map)
+        folium.Marker(coordinates[-1], popup="Ziel", icon=folium.Icon(color="red")).add_to(route_map)
+        
+        route_map.save(str(file_path))
