@@ -22,7 +22,7 @@ class SimulationConfig:
     motor_efficiency: float = 0.85
     motor_max_mechanical_power_w: float = 250.0
 
-    # Fahrerleistung kann bei Bedarf verändert werden.
+
     rider_power_w: float = 0.0
 
     smoothing_enabled: bool = True
@@ -34,6 +34,8 @@ class SimulationConfig:
 
     allow_regeneration: bool = True
     regeneration_efficiency: float = 0.60
+
+    drga_coefficient: float = 0.7
 
     @property
     def total_mass_kg(self) -> float:
