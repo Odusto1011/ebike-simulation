@@ -102,6 +102,11 @@ class ResultVisualizer:
         file_path: Path,
     ) -> None:
         plt.figure(figsize=(10, 5))
+
+        min_val = min(y.min() for y in ys)
+        if min_val < 0:
+            plt.axhline(0, color='black', linestyle='--', linewidth=1, alpha=0.7)
+
         for y, label in zip(ys, labels):
             plt.plot(x, y, label=label)
         plt.xlabel(xlabel)

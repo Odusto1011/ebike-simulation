@@ -32,7 +32,7 @@ class SimulationConfig:
     max_abs_acceleration_m_s2: float = 8.0
     max_abs_grade: float = 0.35
 
-    allow_regeneration: bool = False
+    allow_regeneration: bool = True
     regeneration_efficiency: float = 0.60
 
     @property
