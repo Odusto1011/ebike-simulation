@@ -135,6 +135,12 @@ Diese Werte sind deshalb konfigurierbar und in `SimulationConfig` dokumentiert.
 ```bash
 pytest
 ```
+## Unit Tests
+
+Die Unit Tests können mit folgendem Befehl ausgeführt werden:
+
+```bash
+python -m pytest
 
 ## UML-Klassendiagramm
 
