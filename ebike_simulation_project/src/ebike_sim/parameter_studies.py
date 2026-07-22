@@ -26,7 +26,7 @@ def run_studies(gps_file: Path) -> None:
     test_masses = np.arange(70, 135, 5)
     energy_results_mass = []
 
-    print("\nStarte Sarameterstudie 1: Veränderung der Masse auf den Akkuverbauch:")
+    print("\nStarte Parameterstudie 1: Veränderung der Masse auf den Akkuverbauch:")
     for mass in test_masses:
         config = SimulationConfig(
             smoothing_enabled=True,
@@ -63,10 +63,8 @@ def run_studies(gps_file: Path) -> None:
     plt.close()
 
 
-# 2.Studie Einfluss des Luftwiderstandes (cw-Wert)
+    # 2.Studie: Einfluss des Luftwiderstandes (cw-Wert)
     
-
-        # 2. Studie: Einfluss des Luftwiderstandes (c_w · A)
     test_drag_areas = np.arange(0.30, 0.86, 0.05)
     energy_results_drag = []
 
@@ -136,6 +134,49 @@ def run_studies(gps_file: Path) -> None:
         dpi=160
     )
     plt.close()
+
+
+    # 3. Studie: Einfluss des Reifendurchmessers (24 - 29 Zoll)
+
+    test_diameters = np.arange(0.60, 0.76, 0.02)
+    energy_results_diameter = []
+
+    print("\nStarte Parameterstudie 3: Einfluss von Reifendurchmesser")
+    for diameter in test_diameters:
+        config = SimulationConfig(
+            smoothing_enabled=True,
+            wheel_diameter_inch=float(diameter) / 0.0254
+        )
+
+        route = RouteAnalyzer(config).analyze(gps_data)
+        physics = BikePhysicsModel(config)
+        motor = Motor(
+            torque_constant_nm_per_a=config.motor_torque_constant_nm_per_a,
+            efficiency=config.motor_efficiency,
+            max_mechanical_power_w=config.motor_max_mechanical_power_w,
+        )   
+
+        lipo = LiPoBattery(series_cells=10, parallel_cells=20, cell_capacity_ah=3.0, initial_soc=1.0)
+        nmc = NMCBattery(series_cells=10, parallel_cells=4, cell_capacity_ah=3.0, initial_soc=1.0)
+        
+        simulation = EBikeSimulation(config, physics, motor)
+        results, summary = simulation.run(route, [lipo, nmc])  # Hier nutzen wir direkt den Unterstrich!
+        
+        lipo_end_soc = results["lipo_soc"].iloc[-1]
+        consumed_wh = 2220.0 - (lipo_end_soc * 2220.0)
+        energy_results_diameter.append(consumed_wh)
+        print(f" - Durchmesser: {diameter:.2f} m -> Verbrauch: {consumed_wh:.2f} Wh")
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(test_diameters, energy_results_diameter, marker='^', color='green', linewidth=2)
+    plt.title("Parameterstudie: Einfluss des Reifendurchmessers")
+    plt.xlabel("Reifendurchmesser / m")
+    plt.ylabel("Verbrauchte Energie (LiPo) / Wh")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(output_dir / "study_03_diameter.png", dpi=160)
+    plt.close()
+
 
 
 if __name__ == "__main__":

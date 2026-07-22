@@ -17,6 +17,7 @@ class BatteryStep:
     power_w: float
     energy_delta_wh: float
     power_limited: bool
+    temperatur_c: float
 
 
 class Battery(ABC):
@@ -35,7 +36,12 @@ class Battery(ABC):
         cell_capacity_ah: float,
         cell_internal_resistance_ohm: float,
         initial_soc: float = 1.0,
+        initial_temp_c: float = 1.0,
+        ambient_temp_c: float = 20.0,
+        thermal_capacity_j_per_k: float = 20.0,
+        cooling_coefficient: float = 5.0,
     ) -> None:
+        
         if series_cells <= 0 or parallel_cells <= 0:
             raise ValueError("Serien- und Parallelzahl müssen positiv sein.")
         if cell_capacity_ah <= 0:
@@ -50,6 +56,12 @@ class Battery(ABC):
         self.cell_internal_resistance_ohm = cell_internal_resistance_ohm
         self.soc = float(np.clip(initial_soc, 0.0, 1.0))
 
+        self.current_temp_c = initial_temp_c
+        self.ambient_temp_c = ambient_temp_c
+        self.thermal_capacity = thermal_capacity_j_per_k
+        self.cooling_coefficient = cooling_coefficient
+        
+
     @property
     def pack_capacity_ah(self) -> float:
         return self.parallel_cells * self.cell_capacity_ah
@@ -57,11 +69,15 @@ class Battery(ABC):
     @property
     def pack_internal_resistance_ohm(self) -> float:
         # Serienwiderstände addieren sich; Parallelschaltung reduziert Widerstand.
-        return (
+        base_resistance = (
             self.series_cells
             * self.cell_internal_resistance_ohm
             / self.parallel_cells
         )
+        
+        temp_factor = float(np.exp(-0.04 * (self.current_temp_c - 20.0)))
+        return max(base_resistance * temp_factor, base_resistance * 0.3)
+
 
     @property
     def nominal_energy_wh(self) -> float:
@@ -81,6 +97,8 @@ class Battery(ABC):
         power_limited = False
 
         if abs(power) < 1e-12 or delta_t_s == 0:
+            cooling_w = (self.current_temp_c - self.ambient_temp_c) * self.cooling_coefficient
+            self.current_temp_c -= (cooling_w * delta_t_s) /self.thermal_capacity
             return BatteryStep(
                 soc=self.soc,
                 open_circuit_voltage_v=ocv,
@@ -89,6 +107,7 @@ class Battery(ABC):
                 power_w=0.0,
                 energy_delta_wh=0.0,
                 power_limited=False,
+                temperatur_c=float(self.current_temp_c),
             )
 
         if power > 0:
@@ -108,6 +127,11 @@ class Battery(ABC):
                 raise BatteryPowerError("Ungültiger Arbeitspunkt beim Laden.")
             current = (ocv - np.sqrt(discriminant)) / (2.0 * resistance)
             terminal_voltage = ocv - current * resistance
+
+        heat_generated_w = (current ** 2) * resistance
+        cooling_w = (self.current_temp_c - self.ambient_temp_c) * self.cooling_coefficient
+        delta_temp = ((heat_generated_w - cooling_w) * delta_t_s) / self.thermal_capacity
+        self.current_temp_c += delta_temp
 
         # Coulomb Counting. Bei Entladung ist current > 0.
         delta_ah = current * delta_t_s / 3600.0
@@ -137,6 +161,7 @@ class Battery(ABC):
             power_w=float(power),
             energy_delta_wh=float(energy_delta_wh),
             power_limited=power_limited,
+            temperatur_c=float(self.current_temp_c),
         )
 
 
@@ -154,6 +179,8 @@ class LiPoBattery(Battery):
         parallel_cells: int = 4,
         cell_capacity_ah: float = 3.0,
         initial_soc: float = 1.0,
+        initial_temp_c: float = 20.0,
+        ambient_temp_c: float = 20.0,
     ) -> None:
         super().__init__(
             name="LiPo",
@@ -162,6 +189,8 @@ class LiPoBattery(Battery):
             cell_capacity_ah=cell_capacity_ah,
             cell_internal_resistance_ohm=0.008,
             initial_soc=initial_soc,
+            initial_temp_c=initial_temp_c,
+            ambient_temp_c=ambient_temp_c,
         )
 
     def pack_ocv_v(self, soc: float) -> float:
