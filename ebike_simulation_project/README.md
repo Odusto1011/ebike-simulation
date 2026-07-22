@@ -2,7 +2,7 @@
 
 Dieses Projekt liest GPS-Daten ein und berechnet daraus Strecke, Geschwindigkeit,
 Beschleunigung, Steigung, Fahrwiderstände, Motorleistung, Drehmoment, Motorstrom
-sowie den Ladezustand eines LiPo- und eines NMC-Akkus.
+sowie den Ladezustand eines LiPo- und eines NMC-Akkus. Erwähnung der Himmelsrichtung und Parameterstudien in der Einleitung. Zusätzlich werden die genaue Himmelsrichtung der Route sowie umfassende Parameterstudien unterstützt.
 
 ## Modellparameter
 
@@ -22,6 +22,8 @@ Akkus:
 - LiPo-Innenwiderstand: 8 mOhm/Zelle
 - NMC-Innenwiderstand: 7 mOhm/Zelle
 - OCV-SOC-Kennlinien entsprechend der Aufgabenstellung
+- Dokumentation der thermischen Startparameter und des dynamischen Akku-Verhaltens
+- Start- und Umgebungstemperatur: standardmäßig 20 °C (inkl. dynamischer Thermodynamik, Wärmekapazität und Kühlkoeffizient)
 
 Da weder `x` noch die Zellkapazität vorgegeben wurden, verwendet `main.py`
 standardmäßig **10S4P mit 3,0 Ah pro Zelle**. Das entspricht nominell etwa
@@ -68,7 +70,13 @@ beispielsweise `Zeitstempel`, `Breitengrad`, `Längengrad` und `Höhe`.
 python main.py data/example_gps.csv
 ```
 
-Optional:
+## Parameterstudien ausführen
+
+```bash
+python src/ebike_sim/parameter_studies.py
+```
+
+Optional für die Hauptsimulation:
 
 ```bash
 python main.py meine_fahrt.csv --output-dir ergebnisse
@@ -165,6 +173,7 @@ classDiagram
     }
     class RouteAnalyzer {
         +analyze(gps) DataFrame
+        -_calculate_bearing(lat, lon) ndarray
     }
     class BikePhysicsModel {
         +calculate(route) DataFrame
@@ -205,12 +214,13 @@ flowchart TD
     C -- Nein --> D[Fehler loggen und Programm beenden]
     C -- Ja --> E[GPS-Daten sortieren und glätten]
     E --> F[Strecke und Zeitdifferenzen berechnen]
-    F --> G[Geschwindigkeit, Beschleunigung und Steigung berechnen]
-    G --> H[Fahrwiderstände und Leistung berechnen]
-    H --> I[Drehmoment und Motorstrom berechnen]
-    I --> J[LiPo-Akku simulieren]
-    J --> K[NMC-Akku simulieren]
-    K --> L[Ergebnisdatei und Kennwerte erzeugen]
-    L --> M[Diagramme speichern]
-    M --> N[Programmende]
+    F --> G[Himmelsrichtung per Vektorrechnung bestimmen]
+    G --> H[Geschwindigkeit, Beschleunigung und Steigung berechnen]
+    H --> I[Fahrwiderstände und Leistung berechnen]
+    I --> J[Drehmoment und Motorstrom berechnen]
+    J --> K[LiPo-Akku simulieren inkl. Thermodynamik]
+    K --> L[NMC-Akku simulieren inkl. Thermodynamik]
+    L --> M[Ergebnisdatei und Kennwerte erzeugen]
+    M --> N[Diagramme/ Parameterstudien speichern]
+    N --> O[Programmende]
 ```
