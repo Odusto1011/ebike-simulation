@@ -130,6 +130,20 @@ Die Aufgabenstellung nennt keine Fahrerleistung, keine konkrete Zellkapazität,
 keine Parallelzahl, keinen Rollwiderstand und keinen Motorwirkungsgrad.
 Diese Werte sind deshalb konfigurierbar und in `SimulationConfig` dokumentiert.
 
+## Berechnung der Luftdichte
+
+Die Luftdichte wird aus der Höhe über dem Meeresspiegel und der
+Umgebungstemperatur bestimmt. Dazu werden die barometrische
+Höhenformel und die ideale Gasgleichung verwendet.
+
+Die berechnete Luftdichte wird anschließend zur Bestimmung der
+Luftwiderstandskraft verwendet:
+
+F_Luft = 0.5 · rho · c_w · A · v²
+
+Die Berechnung geht von trockener Luft aus. Der Einfluss der
+Luftfeuchtigkeit wird nicht berücksichtigt.
+
 ## Tests
 
 ```bash

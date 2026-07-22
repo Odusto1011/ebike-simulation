@@ -12,7 +12,7 @@ class SimulationConfig:
 
     # Vorgegeben: Produkt aus Luftwiderstandsbeiwert c_w und Stirnfläche A.
     drag_area_m2: float = 0.5625
-    air_density_kg_m3: float = 1.225
+    # air_density_kg_m3: float = 1.225 nicht mehr benötigt da die luftdichte errechnet wird
 
     wheel_diameter_inch: float = 27.0
     rolling_resistance_coefficient: float = 0.008
@@ -35,7 +35,14 @@ class SimulationConfig:
     allow_regeneration: bool = True
     regeneration_efficiency: float = 0.60
 
-    drga_coefficient: float = 0.7
+  
+
+    ambient_temperature_c: float = 20.0
+
+    sea_level_pressure_pa: float = 101325.0
+    sea_level_temperature_k: float = 288.15
+    temperature_lapse_rate_k_per_m: float = 0.0065
+    specific_gas_constant_air: float = 287.05
 
     @property
     def total_mass_kg(self) -> float:
