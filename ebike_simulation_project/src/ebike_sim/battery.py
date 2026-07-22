@@ -68,16 +68,15 @@ class Battery(ABC):
 
     @property
     def pack_internal_resistance_ohm(self) -> float:
-        # Serienwiderstände addieren sich; Parallelschaltung reduziert Widerstand.
         base_resistance = (
             self.series_cells
             * self.cell_internal_resistance_ohm
             / self.parallel_cells
         )
         
-        temp_factor = float(np.exp(-0.04 * (self.current_temp_c - 20.0)))
+        safe_temp = float(np.clip(self.current_temp_c, -20.0, 80.0))
+        temp_factor = float(np.exp(-0.04 * (safe_temp - 20.0))) 
         return max(base_resistance * temp_factor, base_resistance * 0.3)
-
 
     @property
     def nominal_energy_wh(self) -> float:
@@ -213,6 +212,8 @@ class NMCBattery(Battery):
         parallel_cells: int = 4,
         cell_capacity_ah: float = 3.0,
         initial_soc: float = 1.0,
+        initial_temp_c: float = 20.0,
+        ambient_temp_c: float = 20.0,
     ) -> None:
         super().__init__(
             name="NMC",
@@ -221,6 +222,8 @@ class NMCBattery(Battery):
             cell_capacity_ah=cell_capacity_ah,
             cell_internal_resistance_ohm=0.007,
             initial_soc=initial_soc,
+            initial_temp_c=initial_temp_c, 
+            ambient_temp_c=ambient_temp_c,
         )
 
     def pack_ocv_v(self, soc: float) -> float:

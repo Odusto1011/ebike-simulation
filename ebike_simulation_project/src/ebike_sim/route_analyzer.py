@@ -36,6 +36,11 @@ class RouteAnalyzer:
         )
         df["distance_m"] = df["segment_distance_m"].cumsum()
 
+        df["heading_deg"] = self._calculate_bearing(
+            df["latitude"].to_numpy(),
+            df["longitude"].to_numpy(),
+        )
+
         raw_speed = df["segment_distance_m"] / df["delta_t_s"]
         raw_speed.iloc[0] = 0.0
         raw_speed = raw_speed.replace([np.inf, -np.inf], np.nan).fillna(0.0)
@@ -114,3 +119,31 @@ class RouteAnalyzer:
         a[0] = 0.0
         c = 2.0 * np.arctan2(np.sqrt(a), np.sqrt(np.maximum(1.0 - a, 0.0)))
         return cls.EARTH_RADIUS_M * c
+
+
+    @classmethod
+    def _calculate_bearing(
+        cls, latitude_deg: np.ndarray, longitude_deg: np.ndarray
+    ) -> np.ndarray:
+        lat = np.radians(latitude_deg)
+        lon = np.radians(longitude_deg)
+
+        lat1 = lat[:-1]
+        lat2 = lat[1:]
+        lon1 = lon[:-1]
+        lon2 = lon[1:]
+
+        dlon = lon2 - lon1
+
+        y = np.sin(dlon) * np.cos(lat2)
+        x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(dlon)
+
+        initial_bearing = np.arctan2(y, x)
+        bearing_deg = (np.degrees(initial_bearing) + 360.0) % 360.0
+
+        if len(bearing_deg) > 0:
+            bearing_deg = np.append(bearing_deg, bearing_deg[-1])
+        else:
+            bearing_deg = np.array([0.0])
+
+        return bearing_deg
