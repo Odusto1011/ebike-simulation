@@ -70,7 +70,7 @@ beispielsweise `Zeitstempel`, `Breitengrad`, `Längengrad` und `Höhe`.
 python main.py data/example_gps.csv
 ```
 
-## Parameterstudien ausführen
+Parameterstudien ausführen:
 
 ```bash
 python src/ebike_sim/parameter_studies.py
