@@ -62,6 +62,9 @@ def main() -> None:
 
     logger.info("Analysiere Route")
     route = RouteAnalyzer(config).analyze(gps_data)
+    print("\n--- GPS Orientierungs-Check ---")
+    print(route[["distance_m", "elevation_filtered_m", "heading_deg"]].head(15))
+    print("-------------------------------\n")
 
     physics = BikePhysicsModel(config)
     motor = Motor(
