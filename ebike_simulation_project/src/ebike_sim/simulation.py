@@ -11,6 +11,7 @@ from .config import SimulationConfig
 from .motor import Motor
 from .physics import BikePhysicsModel
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +37,7 @@ class SimulationSummary:
     consumed_energy_wh: dict[str, float]
 
     def to_text(self) -> str:
-        """Gibt die Zusammenfassung als formatierten Text zurück."""
+        """Gibt die Simulationsergebnisse als formatierten Text zurück."""
 
         lines = [
             "=== Zusammenfassung der E-Bike-Simulation ===",
@@ -64,11 +65,13 @@ class SimulationSummary:
             ),
         ]
 
-        for name in self.final_soc_percent:
+        for name, soc_percent in self.final_soc_percent.items():
+            energy_wh = self.consumed_energy_wh[name]
+
             lines.append(
                 f"{name:>4} End-SOC:             "
-                f"{self.final_soc_percent[name]:.2f} % "
-                f"(Verbrauch {self.consumed_energy_wh[name]:.2f} Wh)"
+                f"{soc_percent:.2f} % "
+                f"(Verbrauch {energy_wh:.2f} Wh)"
             )
 
         return "\n".join(lines)
@@ -92,158 +95,147 @@ class EBikeSimulation:
         route: pd.DataFrame,
         batteries: list[Battery],
     ) -> tuple[pd.DataFrame, SimulationSummary]:
-        """
-        Führt die vollständige E-Bike-Simulation aus.
-        """
+        """Führt die vollständige E-Bike-Simulation aus."""
 
-        # Physikalische Kräfte berechnen.
-        #
-        # In BikePhysicsModel.calculate() wird unter anderem die
-        # höhen- und temperaturabhängige Luftdichte bestimmt.
+        if route.empty:
+            raise ValueError(
+                "Die Simulation kann nicht mit einer leeren Route "
+                "ausgeführt werden."
+            )
+
+        if not batteries:
+            raise ValueError(
+                "Für die Simulation muss mindestens ein Akku "
+                "übergeben werden."
+            )
+
         df = self.physics.calculate(route)
 
         required_physics_columns = {
             "air_density_kg_m3",
             "force_aero_n",
             "mechanical_power_required_w",
+            "motor_mechanical_power_request_w",
         }
 
-        missing_physics_columns = required_physics_columns.difference(
-            df.columns
-        )
+        missing_columns = required_physics_columns.difference(df.columns)
 
-        if missing_physics_columns:
-            missing_text = ", ".join(
-                sorted(missing_physics_columns)
-            )
+        if missing_columns:
+            missing_text = ", ".join(sorted(missing_columns))
 
             raise KeyError(
-                "Das Physikmodell hat nicht alle benötigten Spalten "
-                f"erzeugt. Fehlend: {missing_text}"
+                "Das Physikmodell hat nicht alle benötigten "
+                f"Ergebnisspalten erzeugt. Fehlend: {missing_text}"
             )
 
-        # Motorberechnung auf Grundlage der vom Physikmodell
-        # bestimmten mechanischen Leistung.
+        # Motorberechnung
         df = self.motor.calculate(
             df,
             self.config.wheel_radius_m,
         )
 
-        # Batteriesimulation für jeden angegebenen Akkutyp.
+        # Batteriesimulation
         for battery in batteries:
             soc_values: list[float] = []
             ocv_values: list[float] = []
-            voltage_values: list[float] = []
+            terminal_voltage_values: list[float] = []
             current_values: list[float] = []
             energy_values: list[float] = []
-            limit_values: list[bool] = []
+            power_limit_values: list[bool] = []
 
             cumulative_energy_wh = 0.0
 
             for row in df.itertuples(index=False):
-                power = float(
+                electrical_power_w = float(
                     row.motor_electrical_power_w
                 )
 
-                if power < 0.0:
+                if electrical_power_w < 0.0:
                     if self.config.allow_regeneration:
-                        power *= (
+                        electrical_power_w *= (
                             self.config.regeneration_efficiency
                         )
                     else:
-                        power = 0.0
+                        electrical_power_w = 0.0
 
                 delta_t_s = float(row.delta_t_s)
 
-                if np.isnan(delta_t_s):
+                if not np.isfinite(delta_t_s) or delta_t_s < 0.0:
                     delta_t_s = 0.0
 
                 step = battery.step(
-                    power,
+                    electrical_power_w,
                     delta_t_s,
                 )
 
-                cumulative_energy_wh += (
-                    step.energy_delta_wh
-                )
+                cumulative_energy_wh += step.energy_delta_wh
 
                 soc_values.append(step.soc)
-                ocv_values.append(
-                    step.open_circuit_voltage_v
-                )
-                voltage_values.append(
+                ocv_values.append(step.open_circuit_voltage_v)
+                terminal_voltage_values.append(
                     step.terminal_voltage_v
                 )
-                current_values.append(
-                    step.battery_current_a
-                )
-                energy_values.append(
-                    cumulative_energy_wh
-                )
-                limit_values.append(
-                    step.power_limited
-                )
+                current_values.append(step.battery_current_a)
+                energy_values.append(cumulative_energy_wh)
+                power_limit_values.append(step.power_limited)
 
-            key = battery.name.lower()
+            battery_key = battery.name.lower()
 
-            df[f"{key}_soc"] = soc_values
-            df[f"{key}_ocv_v"] = ocv_values
-            df[f"{key}_terminal_voltage_v"] = (
-                voltage_values
+            df[f"{battery_key}_soc"] = soc_values
+            df[f"{battery_key}_ocv_v"] = ocv_values
+            df[f"{battery_key}_terminal_voltage_v"] = (
+                terminal_voltage_values
             )
-            df[f"{key}_battery_current_a"] = (
-                current_values
-            )
-            df[f"{key}_energy_consumed_wh"] = (
-                energy_values
-            )
-            df[f"{key}_power_limited"] = limit_values
+            df[f"{battery_key}_battery_current_a"] = current_values
+            df[f"{battery_key}_energy_consumed_wh"] = energy_values
+            df[f"{battery_key}_power_limited"] = power_limit_values
 
             logger.info(
-                "%s-Simulation beendet: "
-                "SOC %.2f %%, Energie %.2f Wh",
+                "%s-Simulation beendet: SOC %.2f %%, Energie %.2f Wh",
                 battery.name,
                 battery.soc * 100.0,
                 cumulative_energy_wh,
             )
 
-        duration_s = float(
-            df["elapsed_s"].iloc[-1]
-        )
-
-        total_distance_m = float(
-            df["distance_m"].iloc[-1]
-        )
+        duration_s = float(df["elapsed_s"].iloc[-1])
+        total_distance_m = float(df["distance_m"].iloc[-1])
 
         if duration_s > 0.0:
-            average_speed_m_s = (
-                total_distance_m / duration_s
-            )
+            average_speed_m_s = total_distance_m / duration_s
         else:
             average_speed_m_s = 0.0
 
-        air_density = df[
-            "air_density_kg_m3"
-        ].to_numpy(dtype=float)
+        air_density = df["air_density_kg_m3"].to_numpy(dtype=float)
+
+        if not np.all(np.isfinite(air_density)):
+            raise ValueError(
+                "Die berechnete Luftdichte enthält ungültige Werte."
+            )
+
+        final_soc_percent = {
+            battery.name: float(
+                df[f"{battery.name.lower()}_soc"].iloc[-1] * 100.0
+            )
+            for battery in batteries
+        }
+
+        consumed_energy_wh = {
+            battery.name: float(
+                df[
+                    f"{battery.name.lower()}_energy_consumed_wh"
+                ].iloc[-1]
+            )
+            for battery in batteries
+        }
 
         summary = SimulationSummary(
-            total_distance_km=(
-                total_distance_m / 1000.0
-            ),
+            total_distance_km=total_distance_m / 1000.0,
             duration_min=duration_s / 60.0,
-            average_speed_km_h=(
-                average_speed_m_s * 3.6
-            ),
-            ascent_m=float(
-                df["ascent_m"].sum()
-            ),
-            descent_m=float(
-                df["descent_m"].sum()
-            ),
+            average_speed_km_h=average_speed_m_s * 3.6,
+            ascent_m=float(df["ascent_m"].sum()),
+            descent_m=float(df["descent_m"].sum()),
             max_required_power_w=float(
-                df[
-                    "mechanical_power_required_w"
-                ].max()
+                df["mechanical_power_required_w"].max()
             ),
             max_motor_power_w=float(
                 df["motor_mechanical_power_w"].max()
@@ -260,23 +252,8 @@ class EBikeSimulation:
             maximum_air_density_kg_m3=float(
                 np.max(air_density)
             ),
-            final_soc_percent={
-                battery.name: float(
-                    df[
-                        f"{battery.name.lower()}_soc"
-                    ].iloc[-1]
-                    * 100.0
-                )
-                for battery in batteries
-            },
-            consumed_energy_wh={
-                battery.name: float(
-                    df[
-                        f"{battery.name.lower()}_energy_consumed_wh"
-                    ].iloc[-1]
-                )
-                for battery in batteries
-            },
+            final_soc_percent=final_soc_percent,
+            consumed_energy_wh=consumed_energy_wh,
         )
 
         return df, summary
