@@ -6,7 +6,9 @@ src/ebike_sim/config.py
 src/ebike_sim/exceptions.py
 src/ebike_sim/gps_reader.py
 src/ebike_sim/motor.py
+src/ebike_sim/parameter_studies.py
 src/ebike_sim/physics.py
+src/ebike_sim/report.py
 src/ebike_sim/route_analyzer.py
 src/ebike_sim/simulation.py
 src/ebike_sim/visualization.py
@@ -16,4 +18,5 @@ src/ebike_simulation.egg-info/dependency_links.txt
 src/ebike_simulation.egg-info/requires.txt
 src/ebike_simulation.egg-info/top_level.txt
 tests/test_battery.py
+tests/test_physics.py
 tests/test_route_analyzer.py

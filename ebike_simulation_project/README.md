@@ -154,6 +154,16 @@ Luftdichtewert.
 Es wird von trockener Luft ausgegangen; der Einfluss der Luftfeuchtigkeit
 wird nicht berücksichtigt.
 
+## Automatisch erzeugter Fahrtbericht
+
+Nach Abschluss der Simulation wird zusätzlich ein einfacher
+LaTeX-Bericht erzeugt. Dieser enthält die wichtigsten Ergebnisse
+der Fahrt, einen Vergleich der verwendeten Akkumodelle, die
+berechnete Luftdichte sowie ausgewählte Diagramme der Simulation.
+
+Der Bericht wird als `fahrtbericht.tex` im Ausgabeordner gespeichert
+und kann anschließend mit LaTeX oder Overleaf als PDF erstellt werden.
+
 ## Unit Tests
 
 Die Unit Tests können mit folgendem Befehl ausgeführt werden:
