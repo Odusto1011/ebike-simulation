@@ -65,6 +65,7 @@ Viele deutsche und englische Alternativnamen werden automatisch erkannt,
 beispielsweise `Zeitstempel`, `Breitengrad`, `Längengrad` und `Höhe`.
 
 ## Start
+Hauptprogramm ausführen:
 
 ```bash
 python main.py data/example_gps.csv
