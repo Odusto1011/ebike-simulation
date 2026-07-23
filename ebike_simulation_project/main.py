@@ -80,12 +80,20 @@ def main() -> None:
         parallel_cells=4,
         cell_capacity_ah=3.0,
         initial_soc=1.0,
+        max_charging_power_w=65.0,
+        brake_resistor_ohm=5.0,
+        thermal_capacity_j_per_k=100.0,
+        cooling_coefficient=0.02,
     )
     nmc = NMCBattery(
         series_cells=10,
         parallel_cells=4,
         cell_capacity_ah=3.0,
         initial_soc=1.0,
+        max_charging_power_w=65.0,
+        brake_resistor_ohm=5.0,
+        thermal_capacity_j_per_k=10.0,
+        cooling_coefficient=0.02,
     )
 
     simulation = EBikeSimulation(config, physics, motor)

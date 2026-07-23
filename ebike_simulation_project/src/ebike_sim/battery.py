@@ -40,8 +40,8 @@ class Battery(ABC):
         initial_temp_c: float = 1.0,
         ambient_temp_c: float = 20.0,
         thermal_capacity_j_per_k: float = 20.0,
-        cooling_coefficient: float = 5.0,
-        max_charging_power_w: float = 250.0,
+        cooling_coefficient: float = 0.02,
+        max_charging_power_w: float = 65.0,
         brake_resistor_ohm: float = 5.0,
     ) -> None:
         
@@ -61,11 +61,13 @@ class Battery(ABC):
 
         self.current_temp_c = initial_temp_c
         self.ambient_temp_c = ambient_temp_c
-        self.thermal_capacity = thermal_capacity_j_per_k
+        self.thermal_capacity_j_per_k = thermal_capacity_j_per_k
         self.cooling_coefficient = cooling_coefficient
 
         self.max_charging_power_w = max_charging_power_w
         self.brake_resistor_ohm = brake_resistor_ohm
+
+        self.cooling_coefficient = cooling_coefficient
         
 
     @property
@@ -105,7 +107,7 @@ class Battery(ABC):
 
         if abs(power) < 1e-12 or delta_t_s == 0:
             cooling_w = (self.current_temp_c - self.ambient_temp_c) * self.cooling_coefficient
-            self.current_temp_c -= (cooling_w * delta_t_s) /self.thermal_capacity
+            self.current_temp_c -= (cooling_w * delta_t_s) /self.thermal_capacity_j_per_k
             return BatteryStep(
                 soc=self.soc,
                 open_circuit_voltage_v=ocv,
@@ -152,7 +154,7 @@ class Battery(ABC):
 
         heat_generated_w = (current ** 2) * resistance
         cooling_w = (self.current_temp_c - self.ambient_temp_c) * self.cooling_coefficient
-        delta_temp = ((heat_generated_w - cooling_w) * delta_t_s) / self.thermal_capacity
+        delta_temp = ((heat_generated_w - cooling_w) * delta_t_s) / self.thermal_capacity_j_per_k
         self.current_temp_c += delta_temp
 
         # Coulomb Counting. Bei Entladung ist current > 0.
@@ -204,8 +206,10 @@ class LiPoBattery(Battery):
         initial_soc: float = 1.0,
         initial_temp_c: float = 20.0,
         ambient_temp_c: float = 20.0,
-        max_charging_power_w: float = 250.0,
+        max_charging_power_w: float = 65.0,
         brake_resistor_ohm: float = 5.0,
+        thermal_capacity_j_per_k: float = 500.0,
+        cooling_coefficient: float = 5.0,
     ) -> None:
         super().__init__(
             name="LiPo",
@@ -217,7 +221,9 @@ class LiPoBattery(Battery):
             initial_temp_c=initial_temp_c,
             ambient_temp_c=ambient_temp_c,
             brake_resistor_ohm=brake_resistor_ohm,
-            max_charging_power_w=max_charging_power_w
+            max_charging_power_w=max_charging_power_w,
+            thermal_capacity_j_per_k=thermal_capacity_j_per_k,
+            cooling_coefficient=cooling_coefficient,
         )
 
     def pack_ocv_v(self, soc: float) -> float:
@@ -242,8 +248,10 @@ class NMCBattery(Battery):
         initial_soc: float = 1.0,
         initial_temp_c: float = 20.0,
         ambient_temp_c: float = 20.0,
-        max_charging_power_w: float = 250.0,
+        max_charging_power_w: float = 65.0,
         brake_resistor_ohm: float = 5.0,
+        thermal_capacity_j_per_k: float = 500.0,
+        cooling_coefficient: float = 5.0,
     ) -> None:
         super().__init__(
             name="NMC",
@@ -256,6 +264,8 @@ class NMCBattery(Battery):
             ambient_temp_c=ambient_temp_c,
             max_charging_power_w=max_charging_power_w,
             brake_resistor_ohm=brake_resistor_ohm,
+            thermal_capacity_j_per_k=thermal_capacity_j_per_k,
+            cooling_coefficient=cooling_coefficient,
         )
 
     def pack_ocv_v(self, soc: float) -> float:
