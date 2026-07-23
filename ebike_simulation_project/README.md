@@ -31,6 +31,12 @@ standardmäßig **10S4P mit 3,0 Ah pro Zelle**. Das entspricht nominell etwa
 
 ## Installation über git Bash
 
+Zielordner auswählen und Repository clonen mit:
+
+```bash
+git clone https://github.com/Odusto1011/ebike-simulation.git
+```
+
 Im Hauptorder der Datei:
 
 ```bash
