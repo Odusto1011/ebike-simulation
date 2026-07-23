@@ -31,7 +31,7 @@ standardmäßig **10S4P mit 3,0 Ah pro Zelle**. Das entspricht nominell etwa
 
 ## Installation
 
-Im Hauptorder der Datei:
+Im Hauptorder der Datei über git Bash:
 
 ```bash
 python -m venv .venv
