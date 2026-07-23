@@ -63,11 +63,15 @@ class ResultVisualizer:
         )
         self._line_plot(
             data["elapsed_s"] / 60.0,
-            [data["motor_current_a"]],
-            ["Motorstrom"],
+            [
+                data["motor_current_a"],
+                data["lipo_battery_current_a"],
+                data["nmc_battery_current_a"]
+            ],
+            ["Motorstrom", "Batteriestrom (LiPo)", "Batteriestrom (NMC)"],
             "Zeit / min",
-            "Motorstrom / A",
-            "Motorstrom über der Zeit",
+            "Strom / A",
+            "Motor- und Batteriestrom",
             output_dir / "06_motorstrom.png",
         )
         self._line_plot(
@@ -116,6 +120,15 @@ class ResultVisualizer:
             "Im Bremswiderstand dissipierte Leistung",
             output_dir / "11_bremswiderstand.png",
         )
+        self._line_plot(
+            data["elapsed_s"] / 60.0,
+            [data["motor_mechanical_power_w"]],
+            ["Motorleistung"],
+            "Zeit / min",
+            "Leistung / W",
+            "Motorleistung über der Zeit",
+            output_dir / "12_motorleistung.png",
+        )
 
         self._create_map(data, output_dir / "09_route_map.html")
 
@@ -129,7 +142,7 @@ class ResultVisualizer:
         title: str,
         file_path: Path,
     ) -> None:
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(10, 6))
 
         min_val = min(y.min() for y in ys)
         if min_val < 0:
