@@ -2,7 +2,7 @@
 
 Dieses Projekt liest GPS-Daten ein und berechnet daraus Strecke, Geschwindigkeit,
 Beschleunigung, Steigung, Fahrwiderstände, Motorleistung, Drehmoment, Motorstrom
-sowie den Ladezustand eines LiPo- und eines NMC-Akkus. Erwähnung der Himmelsrichtung und Parameterstudien in der Einleitung. Zusätzlich werden die genaue Himmelsrichtung der Route sowie umfassende Parameterstudien unterstützt.
+sowie den Ladezustand eines LiPo- und eines NMC-Akkus. Zusätzlich werden die genaue Himmelsrichtung der Route sowie umfassende Parameterstudien unterstützt.
 
 ## Modellparameter
 
