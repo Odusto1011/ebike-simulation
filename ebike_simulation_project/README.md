@@ -68,7 +68,7 @@ beispielsweise `Zeitstempel`, `Breitengrad`, `Längengrad` und `Höhe`.
 Hauptprogramm ausführen:
 
 ```bash
-python main.py data/example_gps.csv
+python main.py data/final_project_input_data.csv
 ```
 
 Parameterstudien ausführen:
