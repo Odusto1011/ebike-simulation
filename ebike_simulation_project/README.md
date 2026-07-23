@@ -92,7 +92,8 @@ Im Ausgabeordner entstehen:
 - `summary.txt`
 - `simulation.log`
 - Diagramme zu Geschwindigkeit, Beschleunigung, Höhe, Leistung, Drehmoment,
-  Motorstrom, Ladezustand und Akkuspannung
+  Motorstrom, Batteriestrom, Ladezustand, Akkuspannung, Akkutemperatur,
+  Bremswiderstand und Motorleistung
 
 ## Physikalisches Modell
 
@@ -189,6 +190,9 @@ classDiagram
     class ResultVisualizer {
         +create_all(data, output_dir)
     }
+    class ParameterStudy {
+        +run_sweep()
+    }
 
     Battery <|-- LiPoBattery
     Battery <|-- NMCBattery
@@ -198,6 +202,7 @@ classDiagram
     Motor --> EBikeSimulation
     Battery --> EBikeSimulation
     EBikeSimulation --> ResultVisualizer
+    ParameterStudy --> EBikeSimulation
 ```
 
 ## Aktivitätsdiagramm
@@ -216,6 +221,6 @@ flowchart TD
     J --> K[LiPo-Akku simulieren inkl. Thermodynamik]
     K --> L[NMC-Akku simulieren inkl. Thermodynamik]
     L --> M[Ergebnisdatei und Kennwerte erzeugen]
-    M --> N[Diagramme/ Parameterstudien speichern]
+    M --> N[Diagramme / Parameterstudien speichern]
     N --> O[Programmende]
 ```
