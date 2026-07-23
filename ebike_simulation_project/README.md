@@ -29,9 +29,9 @@ Da weder `x` noch die Zellkapazität vorgegeben wurden, verwendet `main.py`
 standardmäßig **10S4P mit 3,0 Ah pro Zelle**. Das entspricht nominell etwa
 444 Wh. Diese beiden Werte können direkt in `main.py` verändert werden.
 
-## Installation
+## Installation über git Bash
 
-Im Hauptorder der Datei über git Bash:
+Im Hauptorder der Datei:
 
 ```bash
 python -m venv .venv
@@ -49,7 +49,7 @@ Linux/macOS:
 source .venv/bin/activate
 ```
 
-Pakete installieren über git Bash im Hauptordner:
+Pakete installieren im Hauptordner:
 
 ```bash
 pip install -r requirements.txt
