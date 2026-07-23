@@ -140,30 +140,25 @@ Diese Werte sind deshalb konfigurierbar und in `SimulationConfig` dokumentiert.
 
 ## Berechnung der Luftdichte
 
-Die Luftdichte wird aus der Höhe über dem Meeresspiegel und der
-Umgebungstemperatur bestimmt. Dazu werden die barometrische
-Höhenformel und die ideale Gasgleichung verwendet.
+Die Luftdichte wird während der Simulation für jeden Streckenpunkt aus
+der Höhe über dem Meeresspiegel und der Umgebungstemperatur berechnet.
+Hierzu werden die barometrische Höhenformel und die ideale Gasgleichung
+verwendet.
 
-Die berechnete Luftdichte wird anschließend zur Bestimmung der
-Luftwiderstandskraft verwendet:
+Die berechnete Luftdichte fließt direkt in die Berechnung der
+Luftwiderstandskraft ein und ersetzt den zuvor verwendeten konstanten
+Luftdichtewert.
 
-F_Luft = 0.5 · rho · c_w · A · v²
+Es wird von trockener Luft ausgegangen; der Einfluss der Luftfeuchtigkeit
+wird nicht berücksichtigt.
 
-Die Berechnung geht von trockener Luft aus. Der Einfluss der
-Luftfeuchtigkeit wird nicht berücksichtigt.
-
-## Tests
-
-```bash
-pytest
-```
 ## Unit Tests
 
 Die Unit Tests können mit folgendem Befehl ausgeführt werden:
 
 ```bash
 python -m pytest
-
+```
 ## UML-Klassendiagramm
 
 ```mermaid
