@@ -92,6 +92,31 @@ class ResultVisualizer:
             output_dir / "08_akkuspannung.png",
         )
 
+        self._line_plot(
+            data["elapsed_s"] / 60.0,
+            [
+                data["lipo_temperatur_c"],
+                data["nmc_temperatur_c"],
+            ],
+            ["LiPo", "NMC"],
+            "Zeit / min",
+            "Temperatur / °C",
+            "Zelltemperatur über der Zeit",
+            output_dir / "10_akkutemperatur.png",
+        )
+        self._line_plot(
+            data["elapsed_s"] / 60.0,
+            [
+                data["lipo_brake_dissipated_power_w"],
+                data["nmc_brake_dissipated_power_w"],
+            ],
+            ["LiPo", "NMC"],
+            "Zeit / min",
+            "Leistung / W",
+            "Im Bremswiderstand dissipierte Leistung",
+            output_dir / "11_bremswiderstand.png",
+        )
+
         self._create_map(data, output_dir / "09_route_map.html")
 
     @staticmethod

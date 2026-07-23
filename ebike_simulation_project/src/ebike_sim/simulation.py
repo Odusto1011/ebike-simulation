@@ -142,6 +142,8 @@ class EBikeSimulation:
             current_values: list[float] = []
             energy_values: list[float] = []
             power_limit_values: list[bool] = []
+            temp_values: list[float] = []
+            brake_power_values: list[float] = []
 
             cumulative_energy_wh = 0.0
 
@@ -179,6 +181,9 @@ class EBikeSimulation:
                 energy_values.append(cumulative_energy_wh)
                 power_limit_values.append(step.power_limited)
 
+                temp_values.append(step.temperatur_c)
+                brake_power_values.append(step.brake_dissipated_power_w)
+
             battery_key = battery.name.lower()
 
             df[f"{battery_key}_soc"] = soc_values
@@ -189,6 +194,9 @@ class EBikeSimulation:
             df[f"{battery_key}_battery_current_a"] = current_values
             df[f"{battery_key}_energy_consumed_wh"] = energy_values
             df[f"{battery_key}_power_limited"] = power_limit_values
+
+            df[f"{battery_key}_temperatur_c"] = temp_values
+            df[f"{battery_key}_brake_dissipated_power_w"] = brake_power_values
 
             logger.info(
                 "%s-Simulation beendet: SOC %.2f %%, Energie %.2f Wh",
