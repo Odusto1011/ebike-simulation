@@ -18,6 +18,7 @@ class BatteryStep:
     energy_delta_wh: float
     power_limited: bool
     temperatur_c: float
+    brake_dissipated_power_w: float
 
 
 class Battery(ABC):
@@ -40,6 +41,8 @@ class Battery(ABC):
         ambient_temp_c: float = 20.0,
         thermal_capacity_j_per_k: float = 20.0,
         cooling_coefficient: float = 5.0,
+        max_charging_power_w: float = 250.0,
+        brake_resistor_ohm: float = 5.0,
     ) -> None:
         
         if series_cells <= 0 or parallel_cells <= 0:
@@ -60,6 +63,9 @@ class Battery(ABC):
         self.ambient_temp_c = ambient_temp_c
         self.thermal_capacity = thermal_capacity_j_per_k
         self.cooling_coefficient = cooling_coefficient
+
+        self.max_charging_power_w = max_charging_power_w
+        self.brake_resistor_ohm = brake_resistor_ohm
         
 
     @property
@@ -95,6 +101,8 @@ class Battery(ABC):
         power = float(requested_power_w)
         power_limited = False
 
+        dissipated_power_w = 0.0
+
         if abs(power) < 1e-12 or delta_t_s == 0:
             cooling_w = (self.current_temp_c - self.ambient_temp_c) * self.cooling_coefficient
             self.current_temp_c -= (cooling_w * delta_t_s) /self.thermal_capacity
@@ -107,6 +115,7 @@ class Battery(ABC):
                 energy_delta_wh=0.0,
                 power_limited=False,
                 temperatur_c=float(self.current_temp_c),
+                brake_dissipated_power_w=0.0,
             )
 
         if power > 0:
@@ -120,6 +129,20 @@ class Battery(ABC):
             current = (ocv - np.sqrt(discriminant)) / (2.0 * resistance)
             terminal_voltage = ocv - current * resistance
         else:
+
+            raw_charging_power = -power
+
+            if self.soc >= 1.0 or raw_charging_power > self.max_charging_power_w:
+                if self.soc >= 1.0:
+                    allowed_charging_power = 0.0
+                    dissipated_power_w = raw_charging_power
+                else:
+                    allowed_charging_power = self.max_charging_power_w
+                    dissipated_power_w = raw_charging_power - self.max_charging_power_w
+                
+                power = -allowed_charging_power
+                power_limited = True
+
             # Laden: P ist negativ, Strom ebenfalls negativ.
             discriminant = ocv**2 - 4.0 * resistance * power
             if discriminant < 0:
@@ -161,6 +184,7 @@ class Battery(ABC):
             energy_delta_wh=float(energy_delta_wh),
             power_limited=power_limited,
             temperatur_c=float(self.current_temp_c),
+            brake_dissipated_power_w=float(dissipated_power_w),
         )
 
 
@@ -180,6 +204,8 @@ class LiPoBattery(Battery):
         initial_soc: float = 1.0,
         initial_temp_c: float = 20.0,
         ambient_temp_c: float = 20.0,
+        max_charging_power_w: float = 250.0,
+        brake_resistor_ohm: float = 5.0,
     ) -> None:
         super().__init__(
             name="LiPo",
@@ -190,6 +216,8 @@ class LiPoBattery(Battery):
             initial_soc=initial_soc,
             initial_temp_c=initial_temp_c,
             ambient_temp_c=ambient_temp_c,
+            brake_resistor_ohm=brake_resistor_ohm,
+            max_charging_power_w=max_charging_power_w
         )
 
     def pack_ocv_v(self, soc: float) -> float:
@@ -214,6 +242,8 @@ class NMCBattery(Battery):
         initial_soc: float = 1.0,
         initial_temp_c: float = 20.0,
         ambient_temp_c: float = 20.0,
+        max_charging_power_w: float = 250.0,
+        brake_resistor_ohm: float = 5.0,
     ) -> None:
         super().__init__(
             name="NMC",
@@ -224,6 +254,8 @@ class NMCBattery(Battery):
             initial_soc=initial_soc,
             initial_temp_c=initial_temp_c, 
             ambient_temp_c=ambient_temp_c,
+            max_charging_power_w=max_charging_power_w,
+            brake_resistor_ohm=brake_resistor_ohm,
         )
 
     def pack_ocv_v(self, soc: float) -> float:
