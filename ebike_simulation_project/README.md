@@ -31,6 +31,8 @@ standardmäßig **10S4P mit 3,0 Ah pro Zelle**. Das entspricht nominell etwa
 
 ## Installation
 
+Im Hauptorder der Datei:
+
 ```bash
 python -m venv .venv
 ```
@@ -47,7 +49,7 @@ Linux/macOS:
 source .venv/bin/activate
 ```
 
-Pakete installieren:
+Pakete installieren über git Bash im Hauptordner:
 
 ```bash
 pip install -r requirements.txt
@@ -65,13 +67,13 @@ Viele deutsche und englische Alternativnamen werden automatisch erkannt,
 beispielsweise `Zeitstempel`, `Breitengrad`, `Längengrad` und `Höhe`.
 
 ## Start
-Hauptprogramm ausführen:
+Hauptprogramm ausführen in VS Code (Terminal):
 
 ```bash
 python main.py data/final_project_input_data.csv
 ```
 
-Parameterstudien ausführen:
+Parameterstudien ausführen in VS Code (Terminal):
 
 ```bash
 python src/ebike_sim/parameter_studies.py
@@ -87,7 +89,7 @@ python main.py meine_fahrt.csv --no-smoothing
 
 ## Ergebnisse
 
-Im Ausgabeordner entstehen:
+Im Ausgabeordner (output) entstehen:
 
 - `simulation_results.csv`
 - `summary.txt`
